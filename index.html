@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>IndoMoney Coin Stack Tower</title>
   <style>
     :root {
@@ -22,6 +22,7 @@
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
     }
 
     html,
@@ -36,8 +37,10 @@
         linear-gradient(160deg, #39050a 0%, #7b0912 48%, #190812 100%);
       color: var(--ink);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      touch-action: manipulation;
+      touch-action: none;
+      overscroll-behavior: none;
       user-select: none;
+      -webkit-user-select: none;
       cursor: none;
     }
 
@@ -411,7 +414,11 @@
       targetCameraY: 0,
       lastTime: 0,
       muted: false,
-      audio: null
+      audio: null,
+      sessionId: null,
+      gameStartTime: null,
+      lastLoggedScore: 0,
+      loggedGameEnd: false
     };
 
     const colors = ["#d71920", "#ffd166", "#ff5a3d", "#24b6a4", "#b31217", "#f0a202", "#7a0b12", "#1d9a8b"];
@@ -422,6 +429,7 @@
       { points: 300, label: "Potongan 75 NT", url: "https://forms.cloud.microsoft/r/D0T6cjiJxW" },
       { points: 400, label: "Gratis ongkir", url: "https://forms.cloud.microsoft/r/VmXXyvBd3S", final: true }
     ];
+    const PLAY_LOG_URL = "https://script.google.com/macros/s/AKfycbxcU4ct2ujc7zNPcjXElJy42OoIwUSVTViC-0uuc_oCMJpZtYmIgV7BnC6UJ_Z6vLDu/exec";
     let w = 0;
     let h = 0;
     let dpr = 1;
@@ -491,6 +499,11 @@
       state.score = 0;
       state.streak = 0;
       state.reachedRewards.clear();
+      state.sessionId = generateSessionId();
+      state.gameStartTime = Date.now();
+      state.lastLoggedScore = 0;
+      state.loggedGameEnd = false;
+      sendPlayLog("start");
       state.cameraY = 0;
       state.targetCameraY = 0;
       const width = Math.min(220, w * 0.66);
@@ -535,6 +548,7 @@
 
       state.coins.push(makeCoin(nextX, active.y, nextWidth, perfect ? "#ffd166" : active.color));
       state.score += perfect ? 3 + state.streak : 1;
+      state.lastLoggedScore = state.score;
       state.streak = perfect ? state.streak + 1 : 0;
       state.targetCameraY = Math.max(0, (state.coins.length - 7) * coinH);
 
@@ -580,6 +594,7 @@
       actionsEl.classList.remove("reward-mode");
       overlay.classList.add("show");
       hintEl.textContent = "IndoMoney: Aman, cepat terpercaya";
+      sendPlayLog("game_over", { success: false });
       beep(180, .12);
     }
 
@@ -604,6 +619,7 @@
       primaryBtn.textContent = "Lanjut main";
       voucherLink.textContent = "Ambil voucher";
       voucherLink.href = reward.url;
+      sendPlayLog("checkpoint", { checkpoint: reward.points, reward: reward.label });
       actionsEl.classList.add("reward-mode");
       overlay.classList.add("show");
       hintEl.textContent = `${reward.points} poin = ${reward.label}`;
@@ -624,6 +640,7 @@
       primaryBtn.textContent = "Main lagi";
       voucherLink.textContent = "Ambil gratis ongkir";
       voucherLink.href = reward.url;
+      sendPlayLog("final_win", { checkpoint: reward.points, reward: reward.label, success: true });
       actionsEl.classList.add("reward-mode");
       overlay.classList.add("show");
       hintEl.textContent = "400 poin = Gratis ongkir";
@@ -635,6 +652,7 @@
       state.running = true;
       state.pausedForReward = false;
       state.modalMode = "playing";
+      sendPlayLog("continue", { checkpoint: state.lastLoggedScore });
       overlay.classList.remove("show");
       actionsEl.classList.remove("reward-mode");
       hintEl.textContent = "Lanjut. Kejar hadiah berikutnya.";
@@ -659,6 +677,48 @@
         localStorage.setItem("indomoneyCoinStackBest", String(score));
       } catch (error) {
         // Some app webviews block storage for local files. The game can continue without saving best score.
+      }
+    }
+
+    function generateSessionId() {
+      return "sess_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    }
+
+    function getPlayDuration() {
+      return state.gameStartTime ? Math.round((Date.now() - state.gameStartTime) / 1000) : 0;
+    }
+
+    function sendPlayLog(eventType, extra = {}) {
+      if (!state.sessionId || PLAY_LOG_URL.includes("PASTE_GOOGLE_APPS_SCRIPT")) return;
+
+      if ((eventType === "game_over" || eventType === "final_win") && state.loggedGameEnd) return;
+      if (eventType === "game_over" || eventType === "final_win") state.loggedGameEnd = true;
+
+      const payload = {
+        game: "Tumpuk Berkah IndoMoney",
+        eventType,
+        sessionId: state.sessionId,
+        score: state.score,
+        bestScore: state.best,
+        durationSeconds: getPlayDuration(),
+        success: extra.success === true,
+        checkpoint: extra.checkpoint || "",
+        reward: extra.reward || "",
+        dayName: new Intl.DateTimeFormat("id-ID", { weekday: "long" }).format(new Date()),
+        userAgent: navigator.userAgent.slice(0, 140),
+        timestamp: new Date().toISOString()
+      };
+
+      try {
+        navigator.sendBeacon?.(PLAY_LOG_URL, JSON.stringify(payload)) ||
+          fetch(PLAY_LOG_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+          });
+      } catch (error) {
+        console.warn("Play log failed", error);
       }
     }
 
@@ -851,6 +911,13 @@
       }
     });
 
+    voucherLink.addEventListener("click", () => {
+      sendPlayLog("claim", {
+        checkpoint: state.lastLoggedScore,
+        reward: voucherLink.textContent
+      });
+    });
+
     soundBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       state.muted = !state.muted;
@@ -865,6 +932,18 @@
       }
     });
     window.addEventListener("resize", resize);
+
+    let lastTouchEnd = 0;
+    document.addEventListener("touchend", (event) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 320) event.preventDefault();
+      lastTouchEnd = now;
+    }, { passive: false });
+    document.addEventListener("touchmove", (event) => {
+      if (event.touches.length > 1) event.preventDefault();
+    }, { passive: false });
+    document.addEventListener("gesturestart", (event) => event.preventDefault());
+    document.addEventListener("dblclick", (event) => event.preventDefault());
 
     resize();
     requestAnimationFrame(step);
