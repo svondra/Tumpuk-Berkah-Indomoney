@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>IndoMoney Coin Stack Tower</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f8fafc;
+      --muted: #f1b0a7;
+      --panel: rgba(55, 8, 14, .78);
+      --line: rgba(255, 255, 255, .13);
+      --red: #d71920;
+      --deep-red: #6b0710;
+      --gold: #ffd166;
+      --cream: #fff6e5;
+      --teal: #24b6a4;
+      --mint: #7ef0c5;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 10%, rgba(255, 209, 102, .18), transparent 28%),
+        radial-gradient(circle at 84% 22%, rgba(36, 182, 164, .16), transparent 30%),
+        linear-gradient(160deg, #39050a 0%, #7b0912 48%, #190812 100%);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      touch-action: manipulation;
+      user-select: none;
+      cursor: none;
+    }
+
+    .app {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 100svh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+      cursor: none;
+    }
+
+    .topbar {
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 54px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 42px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--red), #ff4b35);
+      box-shadow: 0 12px 28px rgba(215, 25, 32, .32);
+      color: white;
+      font-weight: 900;
+      letter-spacing: 0;
+      overflow: hidden;
+    }
+
+    .mark img {
+      width: 100%;
+      height: 100%;
+      display: none;
+      object-fit: contain;
+      padding: 4px;
+      background: white;
+    }
+
+    .mark.has-logo {
+      background: white;
+    }
+
+    .mark.has-logo img {
+      display: block;
+    }
+
+    .mark.has-logo span {
+      display: none;
+    }
+
+    .brand-text {
+      display: grid;
+      line-height: 1.05;
+    }
+
+    .brand-text strong {
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .brand-text span {
+      margin-top: 3px;
+      color: #ffe2c0;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(58px, 1fr));
+      gap: 7px;
+      width: min(58vw, 255px);
+    }
+
+    .stat {
+      min-height: 44px;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+    }
+
+    .stat b {
+      display: block;
+      overflow: hidden;
+      font-size: clamp(16px, 5vw, 22px);
+      line-height: 1;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .stage {
+      position: relative;
+      min-height: 0;
+      border: 1px solid rgba(255, 255, 255, .09);
+      border-radius: 8px;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(255, 255, 255, .045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .045) 1px, transparent 1px),
+        rgba(60, 7, 15, .42);
+      background-size: 38px 38px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04), 0 26px 80px rgba(0, 0, 0, .28);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: none;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: linear-gradient(180deg, rgba(57, 5, 10, .28), rgba(57, 5, 10, .82));
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease;
+    }
+
+    .overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .dialog {
+      width: min(100%, 355px);
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(62, 8, 16, .94);
+      box-shadow: 0 24px 65px rgba(0, 0, 0, .36);
+      text-align: center;
+      backdrop-filter: blur(18px);
+    }
+
+    .dialog h1 {
+      margin: 0;
+      font-size: clamp(26px, 8vw, 38px);
+      line-height: .95;
+      letter-spacing: 0;
+    }
+
+    .dialog p {
+      margin: 12px auto 18px;
+      color: #ffe6d9;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .rewards {
+      display: grid;
+      gap: 8px;
+      margin: 0 0 18px;
+      padding: 0;
+      list-style: none;
+      text-align: left;
+    }
+
+    .rewards li {
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      align-items: center;
+      min-height: 34px;
+      padding: 7px 10px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .08);
+      color: var(--cream);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .rewards b {
+      color: var(--gold);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 48px;
+      gap: 9px;
+    }
+
+    .button-row.reward-mode {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    button,
+    .voucher-link {
+      height: 48px;
+      border: 0;
+      border-radius: 8px;
+      color: #08111f;
+      background: var(--gold);
+      font: inherit;
+      font-weight: 900;
+      cursor: none;
+    }
+
+    .voucher-link {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
+      text-decoration: none;
+      text-align: center;
+      line-height: 1.05;
+      background: var(--cream);
+    }
+
+    .button-row.reward-mode .voucher-link {
+      display: flex;
+    }
+
+    .button-row.reward-mode .icon-button {
+      display: none;
+    }
+
+    button:active,
+    .voucher-link:active {
+      transform: translateY(1px);
+    }
+
+    .icon-button {
+      background: rgba(255, 255, 255, .1);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      font-size: 20px;
+    }
+
+    .hint {
+      z-index: 2;
+      min-height: 54px;
+      display: grid;
+      place-items: center;
+      color: #ffe6d9;
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .pulse {
+      animation: pulse .72s ease;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); color: var(--ink); }
+      45% { transform: scale(1.12); color: var(--mint); }
+      100% { transform: scale(1); color: var(--ink); }
+    }
+
+    @media (min-width: 720px) {
+      body {
+        display: grid;
+        place-items: center;
+      }
+
+      .app {
+        width: min(430px, 100vw);
+        height: min(860px, 100vh);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" aria-label="IndoMoney Coin Stack Tower game">
+    <header class="topbar">
+      <div class="brand" aria-label="IndoMoney">
+        <div class="mark" id="logoMark">
+          <img id="brandLogo" src="indomoney-logo.png" alt="IndoMoney logo">
+          <span>IM</span>
+        </div>
+        <div class="brand-text">
+          <strong>IndoMoney</strong>
+          <span>Aman, cepat, terpercaya!</span>
+        </div>
+      </div>
+      <section class="stats" aria-label="Game stats">
+        <div class="stat"><b id="score">0</b><span>Score</span></div>
+        <div class="stat"><b id="streak">0x</b><span>Streak</span></div>
+        <div class="stat"><b id="best">0</b><span>Best</span></div>
+      </section>
+    </header>
+
+    <section class="stage" id="stage">
+      <canvas id="game" aria-label="Coin stack tower play area"></canvas>
+      <div class="overlay show" id="overlay">
+        <div class="dialog">
+          <h1 id="title">Tap to start</h1>
+          <p id="message">Stack koin IndoMoney setinggi mungkin. Lewat 50 poin, koin bergerak lebih cepat.</p>
+          <ul class="rewards" id="rewards">
+            <li><b>100 poin</b><span>Potongan 25 NT</span></li>
+            <li><b>200 poin</b><span>Potongan 50 NT</span></li>
+            <li><b>300 poin</b><span>Potongan 75 NT</span></li>
+            <li><b>400 poin</b><span>Gratis ongkir</span></li>
+          </ul>
+          <div class="button-row" id="actions">
+            <button id="primary" type="button">Tap to start</button>
+            <a class="voucher-link" id="voucher" href="#" rel="noopener">Ambil voucher</a>
+            <button class="icon-button" id="sound" type="button" aria-label="Toggle sound">♪</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="hint" id="hint">IndoMoney: Aman, cepat terpercaya</div>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const stage = document.getElementById("stage");
+    const overlay = document.getElementById("overlay");
+    const titleEl = document.getElementById("title");
+    const messageEl = document.getElementById("message");
+    const primaryBtn = document.getElementById("primary");
+    const actionsEl = document.getElementById("actions");
+    const voucherLink = document.getElementById("voucher");
+    const soundBtn = document.getElementById("sound");
+    const logoMark = document.getElementById("logoMark");
+    const brandLogo = document.getElementById("brandLogo");
+    const scoreEl = document.getElementById("score");
+    const streakEl = document.getElementById("streak");
+    const bestEl = document.getElementById("best");
+    const hintEl = document.getElementById("hint");
+
+    const state = {
+      running: false,
+      gameOver: false,
+      pausedForReward: false,
+      modalMode: "start",
+      coins: [],
+      active: null,
+      score: 0,
+      streak: 0,
+      reachedRewards: new Set(),
+      best: loadBest(),
+      cameraY: 0,
+      targetCameraY: 0,
+      lastTime: 0,
+      muted: false,
+      audio: null
+    };
+
+    const colors = ["#d71920", "#ffd166", "#ff5a3d", "#24b6a4", "#b31217", "#f0a202", "#7a0b12", "#1d9a8b"];
+    const coinLabels = ["Aman", "Cepat", "Terpercaya", "Praktis", "Tidak ada libur", "Banyak promo", "Berlisensi", "Resmi"];
+    const rewards = [
+      { points: 100, label: "Potongan 25 NT", url: "https://forms.cloud.microsoft/r/chBVVTUBGc" },
+      { points: 200, label: "Potongan 50 NT", url: "https://forms.cloud.microsoft/r/j09zkGSD2E" },
+      { points: 300, label: "Potongan 75 NT", url: "https://forms.cloud.microsoft/r/D0T6cjiJxW" },
+      { points: 400, label: "Gratis ongkir", url: "https://forms.cloud.microsoft/r/VmXXyvBd3S", final: true }
+    ];
+    let w = 0;
+    let h = 0;
+    let dpr = 1;
+    let coinH = 28;
+    let baseY = 0;
+
+    bestEl.textContent = state.best;
+    brandLogo.addEventListener("load", () => logoMark.classList.add("has-logo"));
+    brandLogo.addEventListener("error", () => logoMark.classList.remove("has-logo"));
+
+    function resize() {
+      const rect = stage.getBoundingClientRect();
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = Math.max(280, rect.width);
+      h = Math.max(360, rect.height);
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      coinH = Math.max(22, Math.min(32, h * 0.052));
+      baseY = h - 56;
+      if (!state.running && state.coins.length === 0) setupAttract();
+    }
+
+    function setupAttract() {
+      const width = Math.min(210, w * 0.62);
+      state.coins = [
+        makeCoin(w / 2, baseY, width, colors[1]),
+        makeCoin(w / 2, baseY - coinH, width * .82, colors[0]),
+        makeCoin(w / 2, baseY - coinH * 2, width * .66, colors[2])
+      ];
+      state.active = makeActive(width * .78, baseY - coinH * 3);
+      state.cameraY = 0;
+      state.targetCameraY = 0;
+    }
+
+    function makeCoin(x, y, width, color) {
+      return {
+        x,
+        y,
+        width,
+        height: coinH,
+        color,
+        label: coinLabels[state.coins.length % coinLabels.length],
+        shine: Math.random() * 100
+      };
+    }
+
+    function makeActive(width, y) {
+      return {
+        x: width / 2 + 18,
+        y,
+        width,
+        height: coinH,
+        color: colors[state.coins.length % colors.length],
+        label: coinLabels[state.coins.length % coinLabels.length],
+        speed: getCoinSpeed(),
+        dir: 1,
+        shine: Math.random() * 100
+      };
+    }
+
+    function resetGame() {
+      state.running = true;
+      state.gameOver = false;
+      state.pausedForReward = false;
+      state.modalMode = "playing";
+      state.score = 0;
+      state.streak = 0;
+      state.reachedRewards.clear();
+      state.cameraY = 0;
+      state.targetCameraY = 0;
+      const width = Math.min(220, w * 0.66);
+      state.coins = [makeCoin(w / 2, baseY, width, colors[1])];
+      state.active = makeActive(width, baseY - coinH);
+      overlay.classList.remove("show");
+      actionsEl.classList.remove("reward-mode");
+      updateHud();
+      hintEl.textContent = "Tap untuk menjatuhkan koin IndoMoney.";
+    }
+
+    function updateHud() {
+      scoreEl.textContent = state.score;
+      streakEl.textContent = `${state.streak}x`;
+      bestEl.textContent = state.best;
+    }
+
+    function pulse(el) {
+      el.classList.remove("pulse");
+      void el.offsetWidth;
+      el.classList.add("pulse");
+    }
+
+    function dropCoin() {
+      if (!state.running || !state.active) return;
+
+      const top = state.coins[state.coins.length - 1];
+      const active = state.active;
+      const left = Math.max(active.x - active.width / 2, top.x - top.width / 2);
+      const right = Math.min(active.x + active.width / 2, top.x + top.width / 2);
+      const overlap = right - left;
+      const perfectGap = Math.abs(active.x - top.x);
+
+      if (overlap <= Math.max(7, active.width * .08)) {
+        endGame();
+        return;
+      }
+
+      const perfect = perfectGap < Math.max(8, top.width * .045);
+      const nextWidth = perfect ? Math.min(active.width + 7, Math.min(235, w * .68)) : overlap;
+      const nextX = perfect ? top.x : left + overlap / 2;
+
+      state.coins.push(makeCoin(nextX, active.y, nextWidth, perfect ? "#ffd166" : active.color));
+      state.score += perfect ? 3 + state.streak : 1;
+      state.streak = perfect ? state.streak + 1 : 0;
+      state.targetCameraY = Math.max(0, (state.coins.length - 7) * coinH);
+
+      if (perfect) {
+        hintEl.textContent = `Perfect. Streak ${state.streak}x.`;
+        pulse(streakEl);
+        beep(720, .05);
+      } else {
+        hintEl.textContent = state.score >= 50 ? "Lewat 50 poin. Koin makin cepat." : "Bagus. Jaga koin tetap di tengah.";
+        beep(430, .04);
+      }
+
+      pulse(scoreEl);
+      updateHud();
+
+      const y = active.y - coinH;
+      if (state.score >= 400 && !state.reachedRewards.has(400)) {
+        state.reachedRewards.add(400);
+        showFinalReward(rewards[3]);
+        return;
+      }
+
+      if (nextWidth < 24) {
+        endGame();
+      } else {
+        state.active = makeActive(nextWidth, y);
+        checkReward();
+      }
+    }
+
+    function endGame() {
+      state.running = false;
+      state.gameOver = true;
+      state.pausedForReward = false;
+      state.modalMode = "end";
+      state.active = null;
+      state.best = Math.max(state.best, state.score);
+      saveBest(state.best);
+      updateHud();
+      titleEl.textContent = "Coba lagi";
+      messageEl.textContent = `Skor IndoMoney kamu ${state.score}. Best score: ${state.best}. Capai 400 poin untuk Gratis ongkir.`;
+      primaryBtn.textContent = "Retry";
+      actionsEl.classList.remove("reward-mode");
+      overlay.classList.add("show");
+      hintEl.textContent = "IndoMoney: Aman, cepat terpercaya";
+      beep(180, .12);
+    }
+
+    function checkReward() {
+      const reward = rewards.find((item) => state.score >= item.points && !state.reachedRewards.has(item.points));
+      if (!reward) return;
+
+      state.reachedRewards.add(reward.points);
+      if (reward.final) {
+        showFinalReward(reward);
+      } else {
+        showRewardChoice(reward);
+      }
+    }
+
+    function showRewardChoice(reward) {
+      state.running = false;
+      state.pausedForReward = true;
+      state.modalMode = "reward";
+      titleEl.textContent = `${reward.points} poin tercapai`;
+      messageEl.textContent = `Kamu mendapatkan ${reward.label}. Mau lanjut main untuk hadiah lebih besar atau ambil voucher sekarang?`;
+      primaryBtn.textContent = "Lanjut main";
+      voucherLink.textContent = "Ambil voucher";
+      voucherLink.href = reward.url;
+      actionsEl.classList.add("reward-mode");
+      overlay.classList.add("show");
+      hintEl.textContent = `${reward.points} poin = ${reward.label}`;
+      beep(820, .08);
+    }
+
+    function showFinalReward(reward) {
+      state.running = false;
+      state.gameOver = true;
+      state.pausedForReward = false;
+      state.modalMode = "final";
+      state.active = null;
+      state.best = Math.max(state.best, state.score);
+      saveBest(state.best);
+      updateHud();
+      titleEl.textContent = "Selamat!";
+      messageEl.textContent = "SELAMAT, KAMU SUDAH BERHASIL MEMENANGKAN GRATIS ONGKIR! JANGAN LUPA BAGIKAN KEMENANGANMU KE SOSIAL MEDIA";
+      primaryBtn.textContent = "Main lagi";
+      voucherLink.textContent = "Ambil gratis ongkir";
+      voucherLink.href = reward.url;
+      actionsEl.classList.add("reward-mode");
+      overlay.classList.add("show");
+      hintEl.textContent = "400 poin = Gratis ongkir";
+      beep(980, .12);
+    }
+
+    function continueGame() {
+      if (!state.pausedForReward || !state.active) return;
+      state.running = true;
+      state.pausedForReward = false;
+      state.modalMode = "playing";
+      overlay.classList.remove("show");
+      actionsEl.classList.remove("reward-mode");
+      hintEl.textContent = "Lanjut. Kejar hadiah berikutnya.";
+    }
+
+    function getCoinSpeed() {
+      const earlySpeed = 150 + Math.min(125, state.score * 2.5);
+      if (state.score <= 50) return earlySpeed;
+      return 330 + Math.min(260, (state.score - 50) * 5.5);
+    }
+
+    function loadBest() {
+      try {
+        return Number(localStorage.getItem("indomoneyCoinStackBest") || 0);
+      } catch (error) {
+        return 0;
+      }
+    }
+
+    function saveBest(score) {
+      try {
+        localStorage.setItem("indomoneyCoinStackBest", String(score));
+      } catch (error) {
+        // Some app webviews block storage for local files. The game can continue without saving best score.
+      }
+    }
+
+    function handleTap(event) {
+      event.preventDefault();
+      if (state.pausedForReward) {
+        return;
+      }
+      if (!state.running) {
+        resetGame();
+      } else {
+        dropCoin();
+      }
+    }
+
+    function step(time) {
+      const dt = Math.min(.032, (time - state.lastTime) / 1000 || .016);
+      state.lastTime = time;
+
+      if (state.running && state.active) {
+        state.active.x += state.active.dir * state.active.speed * dt;
+        const margin = state.active.width / 2 + 10;
+        if (state.active.x > w - margin) {
+          state.active.x = w - margin;
+          state.active.dir = -1;
+        } else if (state.active.x < margin) {
+          state.active.x = margin;
+          state.active.dir = 1;
+        }
+      }
+
+      state.cameraY += (state.targetCameraY - state.cameraY) * .12;
+      draw(time);
+      requestAnimationFrame(step);
+    }
+
+    function draw(time) {
+      ctx.clearRect(0, 0, w, h);
+      drawBackdrop(time);
+
+      ctx.save();
+      ctx.translate(0, state.cameraY);
+      state.coins.forEach((coin, index) => drawCoin(coin, index === state.coins.length - 1));
+      if (state.active) drawGuideAndActive(state.active);
+      ctx.restore();
+
+      drawBrandStamp();
+    }
+
+    function drawBackdrop(time) {
+      ctx.save();
+      ctx.globalAlpha = .48;
+      for (let i = 0; i < 9; i++) {
+        const x = ((i * 71 + time * .011) % (w + 80)) - 40;
+        const y = 40 + (i * 87) % Math.max(280, h - 60);
+        ctx.fillStyle = i % 2 ? "rgba(255,209,102,.14)" : "rgba(215,25,32,.18)";
+        ctx.beginPath();
+        ctx.roundRect(x, y, 34, 18, 6);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawGuideAndActive(coin) {
+      const top = state.coins[state.coins.length - 1];
+      ctx.save();
+      ctx.strokeStyle = "rgba(255,255,255,.22)";
+      ctx.setLineDash([6, 8]);
+      ctx.beginPath();
+      ctx.moveTo(top.x, top.y - coinH * .25);
+      ctx.lineTo(top.x, coin.y + coinH);
+      ctx.stroke();
+      ctx.restore();
+      drawCoin(coin, false, true);
+    }
+
+    function drawCoin(coin, isTop, active = false) {
+      const x = coin.x - coin.width / 2;
+      const y = coin.y - coin.height / 2;
+      const radius = Math.min(11, coin.height * .42);
+
+      ctx.save();
+      ctx.shadowColor = active ? "rgba(255,209,102,.42)" : "rgba(0,0,0,.30)";
+      ctx.shadowBlur = active ? 22 : 12;
+      ctx.shadowOffsetY = 8;
+
+      const body = ctx.createLinearGradient(x, y, x, y + coin.height);
+      body.addColorStop(0, lighten(coin.color, .18));
+      body.addColorStop(.52, coin.color);
+      body.addColorStop(1, darken(coin.color, .22));
+      ctx.fillStyle = body;
+      ctx.beginPath();
+      ctx.roundRect(x, y, coin.width, coin.height, radius);
+      ctx.fill();
+
+      ctx.shadowColor = "transparent";
+      ctx.strokeStyle = "rgba(255,255,255,.22)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(57,5,10,.25)";
+      ctx.beginPath();
+      ctx.ellipse(coin.x, y + coin.height * .44, coin.width * .34, coin.height * .24, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "rgba(255,255,255,.94)";
+      ctx.font = `900 ${fitCoinFont(coin.label, coin.width, coin.height)}px system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(coin.label, coin.x, y + coin.height * .48);
+
+      if (isTop || active) {
+        ctx.fillStyle = "rgba(255,255,255,.34)";
+        ctx.beginPath();
+        ctx.roundRect(x + coin.width * .12, y + 5, coin.width * .34, 3, 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function fitCoinFont(label, width, height) {
+      const maxSize = Math.max(9, height * .42);
+      const estimated = (width * .78) / Math.max(1, label.length * .58);
+      return Math.max(7, Math.min(maxSize, estimated));
+    }
+
+    function drawBrandStamp() {
+      ctx.save();
+      ctx.globalAlpha = .92;
+      ctx.fillStyle = "rgba(57,5,10,.58)";
+      ctx.beginPath();
+      ctx.roundRect(14, h - 47, Math.min(244, w - 28), 34, 8);
+      ctx.fill();
+      ctx.fillStyle = "#ffd166";
+      ctx.font = "900 12px system-ui, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText("IndoMoney: Aman, cepat terpercaya", 25, h - 30);
+      ctx.restore();
+    }
+
+    function lighten(hex, amount) {
+      return shade(hex, amount);
+    }
+
+    function darken(hex, amount) {
+      return shade(hex, -amount);
+    }
+
+    function shade(hex, amount) {
+      const n = parseInt(hex.slice(1), 16);
+      let r = n >> 16;
+      let g = (n >> 8) & 255;
+      let b = n & 255;
+      r = Math.max(0, Math.min(255, Math.round(r + (amount > 0 ? 255 - r : r) * amount)));
+      g = Math.max(0, Math.min(255, Math.round(g + (amount > 0 ? 255 - g : g) * amount)));
+      b = Math.max(0, Math.min(255, Math.round(b + (amount > 0 ? 255 - b : b) * amount)));
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function ensureAudio() {
+      if (state.audio || state.muted) return;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) state.audio = new AudioContext();
+    }
+
+    function beep(freq, duration) {
+      if (state.muted) return;
+      ensureAudio();
+      if (!state.audio) return;
+      const osc = state.audio.createOscillator();
+      const gain = state.audio.createGain();
+      osc.frequency.value = freq;
+      osc.type = "triangle";
+      gain.gain.setValueAtTime(.001, state.audio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(.06, state.audio.currentTime + .01);
+      gain.gain.exponentialRampToValueAtTime(.001, state.audio.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(state.audio.destination);
+      osc.start();
+      osc.stop(state.audio.currentTime + duration + .02);
+    }
+
+    primaryBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (state.modalMode === "reward") {
+        continueGame();
+      } else {
+        resetGame();
+      }
+    });
+
+    soundBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      state.muted = !state.muted;
+      soundBtn.textContent = state.muted ? "×" : "♪";
+      soundBtn.setAttribute("aria-label", state.muted ? "Turn sound on" : "Turn sound off");
+    });
+
+    stage.addEventListener("pointerdown", handleTap);
+    window.addEventListener("keydown", (event) => {
+      if (event.code === "Space" || event.code === "Enter") {
+        handleTap(event);
+      }
+    });
+    window.addEventListener("resize", resize);
+
+    resize();
+    requestAnimationFrame(step);
+  </script>
+</body>
+</html>
