@@ -260,6 +260,10 @@
       grid-template-columns: 1fr 1fr;
     }
 
+    .button-row.final-mode {
+      grid-template-columns: 1fr;
+    }
+
     button,
     .voucher-link {
       height: 48px;
@@ -287,7 +291,12 @@
       display: flex;
     }
 
-    .button-row.reward-mode .icon-button {
+    .button-row.final-mode #primary {
+      display: none;
+    }
+
+    .button-row.reward-mode .icon-button,
+    .button-row.final-mode .icon-button {
       display: none;
     }
 
@@ -378,7 +387,7 @@
       </div>
     </section>
 
-    <div class="hint" id="hint">IndoMoney selalu di hati</div>
+    <div class="hint" id="hint">IndoMoney: Aman, cepat terpercaya</div>
   </main>
 
   <script>
@@ -429,7 +438,7 @@
       { points: 300, label: "Potongan 75 NT", url: "https://forms.cloud.microsoft/r/D0T6cjiJxW" },
       { points: 400, label: "Gratis ongkir", url: "https://forms.cloud.microsoft/r/VmXXyvBd3S", final: true }
     ];
-    const PLAY_LOG_URL = "https://script.google.com/macros/s/AKfycbyYoj-Mb3cYiJSrrs1upbg9vAtv91u3Coh8eduCotVKCY9XnOTf-hMsv0I3S5tmL1fy/exec";
+    const PLAY_LOG_URL = "https://script.google.com/macros/s/AKfycbzIJGJq46L-FtmVRKehK53FveEW3lwCSl8E57epoSl2hS8HTQIrCMGho3rQtGWUmwA7/exec";
     let w = 0;
     let h = 0;
     let dpr = 1;
@@ -511,6 +520,7 @@
       state.active = makeActive(width, baseY - coinH);
       overlay.classList.remove("show");
       actionsEl.classList.remove("reward-mode");
+      actionsEl.classList.remove("final-mode");
       updateHud();
       hintEl.textContent = "Tap untuk menjatuhkan koin IndoMoney.";
     }
@@ -592,8 +602,9 @@
       messageEl.textContent = `Skor IndoMoney kamu ${state.score}. Best score: ${state.best}. Capai 400 poin untuk Gratis ongkir.`;
       primaryBtn.textContent = "Retry";
       actionsEl.classList.remove("reward-mode");
+      actionsEl.classList.remove("final-mode");
       overlay.classList.add("show");
-      hintEl.textContent = "IndoMoney selalu di hati";
+      hintEl.textContent = "IndoMoney: Aman, cepat terpercaya";
       sendPlayLog("game_over", { success: false });
       beep(180, .12);
     }
@@ -621,6 +632,7 @@
       voucherLink.href = reward.url;
       sendPlayLog("checkpoint", { checkpoint: reward.points, reward: reward.label });
       actionsEl.classList.add("reward-mode");
+      actionsEl.classList.remove("final-mode");
       overlay.classList.add("show");
       hintEl.textContent = `${reward.points} poin = ${reward.label}`;
       beep(820, .08);
@@ -642,6 +654,7 @@
       voucherLink.href = reward.url;
       sendPlayLog("final_win", { checkpoint: reward.points, reward: reward.label, success: true });
       actionsEl.classList.add("reward-mode");
+      actionsEl.classList.add("final-mode");
       overlay.classList.add("show");
       hintEl.textContent = "400 poin = Gratis ongkir";
       beep(980, .12);
@@ -655,6 +668,7 @@
       sendPlayLog("continue", { checkpoint: state.lastLoggedScore });
       overlay.classList.remove("show");
       actionsEl.classList.remove("reward-mode");
+      actionsEl.classList.remove("final-mode");
       hintEl.textContent = "Lanjut. Kejar hadiah berikutnya.";
     }
 
@@ -856,7 +870,7 @@
       ctx.font = "900 12px system-ui, sans-serif";
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-      ctx.fillText("IndoMoney selalu di hati", 25, h - 30);
+      ctx.fillText("IndoMoney: Aman, cepat terpercaya", 25, h - 30);
       ctx.restore();
     }
 
