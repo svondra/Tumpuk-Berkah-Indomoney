@@ -373,10 +373,10 @@
           <h1 id="title">Tap to start</h1>
           <p id="message">Stack koin IndoMoney setinggi mungkin. Lewat 50 poin, koin bergerak lebih cepat.</p>
           <ul class="rewards" id="rewards">
-            <li><b>100 poin</b><span>Potongan 25 NT</span></li>
-            <li><b>200 poin</b><span>Potongan 50 NT</span></li>
-            <li><b>300 poin</b><span>Potongan 75 NT</span></li>
-            <li><b>400 poin</b><span>Gratis ongkir</span></li>
+            <li><b>50 poin</b><span>Potongan 25 NT</span></li>
+            <li><b>100 poin</b><span>Potongan 50 NT</span></li>
+            <li><b>150 poin</b><span>Potongan 75 NT</span></li>
+            <li><b>200 poin</b><span>Gratis ongkir</span></li>
           </ul>
           <div class="button-row" id="actions">
             <button id="primary" type="button">Tap to start</button>
@@ -433,10 +433,10 @@
     const colors = ["#d71920", "#ffd166", "#ff5a3d", "#24b6a4", "#b31217", "#f0a202", "#7a0b12", "#1d9a8b"];
     const coinLabels = ["Aman", "Cepat", "Terpercaya", "Praktis", "Tidak ada libur", "Banyak promo", "Berlisensi", "Resmi"];
     const rewards = [
-      { points: 100, label: "Potongan 25 NT", url: "https://forms.cloud.microsoft/r/chBVVTUBGc" },
-      { points: 200, label: "Potongan 50 NT", url: "https://forms.cloud.microsoft/r/j09zkGSD2E" },
-      { points: 300, label: "Potongan 75 NT", url: "https://forms.cloud.microsoft/r/D0T6cjiJxW" },
-      { points: 400, label: "Gratis ongkir", url: "https://forms.cloud.microsoft/r/VmXXyvBd3S", final: true }
+      { points: 50, label: "Potongan 25 NT", url: "https://forms.cloud.microsoft/r/chBVVTUBGc" },
+      { points: 100, label: "Potongan 50 NT", url: "https://forms.cloud.microsoft/r/j09zkGSD2E" },
+      { points: 150, label: "Potongan 75 NT", url: "https://forms.cloud.microsoft/r/D0T6cjiJxW" },
+      { points: 200, label: "Gratis ongkir", url: "https://forms.cloud.microsoft/r/VmXXyvBd3S", final: true }
     ];
     const PLAY_LOG_URL = "https://script.google.com/macros/s/AKfycbzIJGJq46L-FtmVRKehK53FveEW3lwCSl8E57epoSl2hS8HTQIrCMGho3rQtGWUmwA7/exec";
     let w = 0;
@@ -575,8 +575,8 @@
       updateHud();
 
       const y = active.y - coinH;
-      if (state.score >= 400 && !state.reachedRewards.has(400)) {
-        state.reachedRewards.add(400);
+      if (state.score >= 200 && !state.reachedRewards.has(200)) {
+        state.reachedRewards.add(200);
         showFinalReward(rewards[3]);
         return;
       }
@@ -599,7 +599,7 @@
       saveBest(state.best);
       updateHud();
       titleEl.textContent = "Coba lagi";
-      messageEl.textContent = `Skor IndoMoney kamu ${state.score}. Best score: ${state.best}. Capai 400 poin untuk Gratis ongkir.`;
+      messageEl.textContent = `Skor IndoMoney kamu ${state.score}. Best score: ${state.best}. Capai 200 poin untuk Gratis ongkir.`;
       primaryBtn.textContent = "Retry";
       actionsEl.classList.remove("reward-mode");
       actionsEl.classList.remove("final-mode");
@@ -656,7 +656,7 @@
       actionsEl.classList.add("reward-mode");
       actionsEl.classList.add("final-mode");
       overlay.classList.add("show");
-      hintEl.textContent = "400 poin = Gratis ongkir";
+      hintEl.textContent = "200 poin = Gratis ongkir";
       beep(980, .12);
     }
 
