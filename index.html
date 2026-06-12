@@ -371,7 +371,7 @@
       <div class="overlay show" id="overlay">
         <div class="dialog">
           <h1 id="title">Tap to start</h1>
-          <p id="message">Stack koin IndoMoney setinggi mungkin. Lewat 50 poin, koin bergerak lebih cepat.</p>
+          <p id="message">Stack koin IndoMoney setinggi mungkin. Lewat 100 poin, koin bergerak lebih cepat.</p>
           <ul class="rewards" id="rewards">
             <li><b>50 poin</b><span>Potongan 25 NT</span></li>
             <li><b>100 poin</b><span>Potongan 50 NT</span></li>
@@ -567,7 +567,7 @@
         pulse(streakEl);
         beep(720, .05);
       } else {
-        hintEl.textContent = state.score >= 50 ? "Lewat 50 poin. Koin makin cepat." : "Bagus. Jaga koin tetap di tengah.";
+        hintEl.textContent = state.score >= 100 ? "Lewat 100 poin. Koin makin cepat." : "Bagus. Jaga koin tetap di tengah.";
         beep(430, .04);
       }
 
@@ -673,9 +673,9 @@
     }
 
     function getCoinSpeed() {
-      const earlySpeed = 150 + Math.min(125, state.score * 2.5);
-      if (state.score <= 50) return earlySpeed;
-      return 330 + Math.min(260, (state.score - 50) * 5.5);
+      const earlySpeed = 105 + Math.min(65, state.score * 1.1);
+      if (state.score <= 100) return earlySpeed;
+      return 205 + Math.min(180, (state.score - 100) * 3.2);
     }
 
     function loadBest() {
